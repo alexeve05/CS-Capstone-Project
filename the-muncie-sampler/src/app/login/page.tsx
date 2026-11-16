@@ -29,9 +29,7 @@ export default function LoginPage() {
   }, [session, router]);
 
   const [sessionChecked, setSessionChecked] = useState(false);
-  useEffect(() => {
-    if (!sessionLoading) setSessionChecked(true);
-  }, [sessionLoading]);
+  if (!sessionLoading && !sessionChecked) setSessionChecked(true);
 
   if (!sessionChecked || session) return null;
 
