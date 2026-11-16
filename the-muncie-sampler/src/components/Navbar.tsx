@@ -1,12 +1,19 @@
+"use client";
+
 import Link from "next/link";
+import { authClient } from "@/lib/auth-client";
 
 export default function Navbar() {
+  const { data: session } = authClient.useSession();
+
   return (
     <nav className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        
         <div className="w-1/3 flex justify-start">
-          <Link href="/" className="text-lg font-extrabold tracking-tight text-slate-900 hover:text-slate-600 transition">
+          <Link
+            href="/"
+            className="text-lg font-extrabold tracking-tight text-slate-900 hover:text-slate-600 transition"
+          >
             The Muncie Sampler
           </Link>
         </div>
@@ -21,14 +28,22 @@ export default function Navbar() {
         </div>
 
         <div className="w-1/3 flex justify-end">
-          <Link 
-            href="/login" 
-            className="text-sm font-medium text-slate-900 hover:bg-slate-100 px-4 py-2 rounded-md transition"
-          >
-            Sign In
-          </Link>
+          {session ? (
+            <Link
+              href="/account"
+              className="text-sm font-medium bg-slate-900 text-white hover:bg-slate-800 px-4 py-2 rounded-md transition shadow-sm"
+            >
+              My Account
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="text-sm font-medium text-slate-900 hover:bg-slate-100 px-4 py-2 rounded-md transition"
+            >
+              Sign In
+            </Link>
+          )}
         </div>
-
       </div>
     </nav>
   );
