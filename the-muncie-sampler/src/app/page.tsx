@@ -1,29 +1,51 @@
-import Link from "next/link";
+"use client";
+
+import { usePlayerStore } from "@/store/usePlayerStore";
 
 export default function Home() {
+  const { playTrack, currentTrack, isPlaying, togglePlay } = usePlayerStore();
+
+  const testTrack = {
+    id: "test-1",
+    title: "Test Track",
+    band: "Example Band",
+    audioPath: "/testAudio/TestTrack.wav",
+    coverArt: "/testImages/Album.jpeg",
+  };
+
+  const isCurrentThisTrack = currentTrack?.id === testTrack.id;
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-[75vh] text-center px-4">
-      <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight mb-6">
+    <div className="max-w-4xl mx-auto px-4 py-16">
+      <h1 className="text-4xl font-extrabold text-stone-900 tracking-tight">
         The Muncie Sampler
       </h1>
+      <p className="mt-3 text-lg text-stone-600">Test audio player.</p>
 
-      <p className="text-lg md:text-xl text-slate-600 max-w-2xl mb-10 leading-relaxed">
-        Munice Sampler.
-      </p>
+      <div className="mt-10 p-6 bg-white border-2 border-stone-900 rounded-2xl  flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-stone-900 mt-2">
+            {testTrack.title}
+          </h2>
+          <p className="text-sm text-stone-500">{testTrack.band}</p>
+        </div>
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        <Link
-          href="/albums"
-          className="px-8 py-3 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition shadow-sm"
+        <button
+          onClick={() => {
+            if (isCurrentThisTrack) {
+              togglePlay();
+            } else {
+              playTrack(testTrack);
+            }
+          }}
+          className="px-5 py-3 bg-stone-900 text-white font-semibold rounded-xl hover:bg-stone-800 transition flex items-center gap-2 cursor-pointer"
         >
-          Browse the Archive
-        </Link>
-        <Link
-          href="/submit"
-          className="px-8 py-3 bg-white text-slate-900 border border-slate-300 rounded-lg font-medium hover:bg-slate-50 transition shadow-sm"
-        >
-          Submit Your Music
-        </Link>
+          {isCurrentThisTrack && isPlaying ? (
+            <span>Pause</span>
+          ) : (
+            <span>Play</span>
+          )}
+        </button>
       </div>
     </div>
   );
