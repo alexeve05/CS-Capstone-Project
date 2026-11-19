@@ -2,7 +2,16 @@
 
 import { useRef, useEffect, useState } from "react";
 import { usePlayerStore } from "@/store/usePlayerStore";
-import { Play, Pause, ChevronDown, X, Volume2, VolumeX } from "lucide-react";
+import {
+  Play,
+  Pause,
+  ChevronDown,
+  X,
+  Volume2,
+  VolumeX,
+  SkipBack,
+  SkipForward,
+} from "lucide-react";
 
 function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
@@ -14,10 +23,14 @@ function formatTime(seconds: number): string {
 export default function AudioPlayer() {
   const {
     currentTrack,
+    queue,
+    currentIndex,
     isPlaying,
     isExpanded,
     volume,
     isMuted,
+    nextTrack,
+    prevTrack,
     togglePlay,
     pause,
     toggleExpanded,
@@ -30,7 +43,7 @@ export default function AudioPlayer() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
-
+  
   // Sync play/pause with HTMLAudioElement
   useEffect(() => {
     if (!audioRef.current) return;
@@ -40,7 +53,7 @@ export default function AudioPlayer() {
       audioRef.current.pause();
     }
   }, [isPlaying, currentTrack]);
-
+  
   // Sync volume/mute with HTMLAudioElement
   useEffect(() => {
     if (!audioRef.current) return;
@@ -54,6 +67,11 @@ export default function AudioPlayer() {
   }, [currentTrack?.id]);
 
   if (!currentTrack) return null;
+
+  const hasPrev = currentIndex > 0;
+  const hasNext = queue.length > 0 && currentIndex < queue.length - 1;
+  const totalTracks = currentTrack.albumTrackCount ?? queue.length;
+  const trackNumber = currentIndex >= 0 ? currentIndex + 1 : 1;
 
   const handleSeekChange = (value: number) => {
     setCurrentTime(value);
@@ -83,8 +101,12 @@ export default function AudioPlayer() {
           }
         }}
         onEnded={() => {
-          pause();
-          setCurrentTime(0);
+          if (hasNext) {
+            nextTrack();
+          } else {
+            pause();
+            setCurrentTime(0);
+          }
         }}
       />
 
@@ -118,7 +140,11 @@ export default function AudioPlayer() {
               className="text-white hover:text-stone-300 transition cursor-pointer"
               aria-label={isPlaying ? "Pause" : "Play"}
             >
-              {isPlaying ? <Pause size={16} /> : <Play size={16} className="translate-x-0.5" />}
+              {isPlaying ? (
+                <Pause size={16} />
+              ) : (
+                <Play size={16} className="translate-x-0.5" />
+              )}
             </button>
             <button
               onClick={closePlayer}
@@ -133,7 +159,7 @@ export default function AudioPlayer() {
         // Expanded view
         <div className="fixed bottom-0 left-0 right-0 bg-stone-100 border-t-2 border-stone-900 text-stone-900 px-4 py-3 z-50 shadow-[0_-4px_0_0_rgba(28,25,23,0.05)] animate-in slide-in-from-bottom-5">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            {/* Left (cover art, track info) */}
+            {/* Left (cover art, track info, compilation context) */}
             <div className="flex items-center gap-4 w-1/3 min-w-0">
               {currentTrack.coverArt ? (
                 <img
@@ -153,22 +179,52 @@ export default function AudioPlayer() {
                 <p className="text-xs font-medium text-stone-500 truncate">
                   {currentTrack.band}
                 </p>
+                {(totalTracks > 1 || currentTrack.albumTotalDuration) && (
+                  <p className="text-[11px] text-stone-500 truncate mt-0.5 tabular-nums">
+                    Track {trackNumber} of {totalTracks}
+                    {currentTrack.albumTotalDuration
+                      ? ` · ${formatTime(currentTrack.albumTotalDuration)} album`
+                      : ""}
+                  </p>
+                )}
               </div>
             </div>
 
-            {/* Center (play/pause, progress bar) */}
+            {/* Center (prev/play/pause/next, progress bar) */}
             <div className="flex flex-col items-center justify-center w-1/3 max-w-md">
-              <button
-                onClick={togglePlay}
-                className="w-11 h-11 rounded-full bg-stone-900 text-white flex items-center justify-center hover:bg-stone-800 transition shadow-sm active:scale-95 cursor-pointer"
-                aria-label={isPlaying ? "Pause" : "Play"}
-              >
-                {isPlaying ? (
-                  <Pause size={18} />
-                ) : (
-                  <Play size={18} className="translate-x-0.5" />
-                )}
-              </button>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={prevTrack}
+                  disabled={!hasPrev}
+                  className="p-2 text-stone-700 hover:text-stone-900 disabled:text-stone-300 disabled:cursor-not-allowed transition cursor-pointer"
+                  aria-label="Previous track"
+                  title="Previous track"
+                >
+                  <SkipBack size={18} />
+                </button>
+
+                <button
+                  onClick={togglePlay}
+                  className="w-11 h-11 rounded-full bg-stone-900 text-white flex items-center justify-center hover:bg-stone-800 transition shadow-sm active:scale-95 cursor-pointer"
+                  aria-label={isPlaying ? "Pause" : "Play"}
+                >
+                  {isPlaying ? (
+                    <Pause size={18} />
+                  ) : (
+                    <Play size={18} className="translate-x-0.5" />
+                  )}
+                </button>
+
+                <button
+                  onClick={nextTrack}
+                  disabled={!hasNext}
+                  className="p-2 text-stone-700 hover:text-stone-900 disabled:text-stone-300 disabled:cursor-not-allowed transition cursor-pointer"
+                  aria-label="Next track"
+                  title="Next track"
+                >
+                  <SkipForward size={18} />
+                </button>
+              </div>
 
               <div className="w-full flex items-center gap-2 mt-2 text-[11px] font-medium text-stone-600 tabular-nums">
                 <span className="w-9 text-right">{formatTime(currentTime)}</span>
